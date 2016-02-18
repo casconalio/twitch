@@ -1,46 +1,20 @@
-<?php
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Team Amazon - Twitch</title>
+    <link href="style.css" type="text/css" rel="stylesheet" />
+</head>
+<body>
+	<h1>CSE 498 Capstone - Team Amazon - Twitch.tv
+	<p><a href="twitch_mod/twitch.php">Twitch chat!</a></p>
+	<p><a href="twitch_mod/chatpage.html">Chat html</a></p>
+	<p><a href="twitch_mod/chat.php">Chat 1.0</a></p>
 
+	<p><a href="https://github.com/casconalio/twitch.git">Github</a></p>
+	<p><a href="misc">Extras</a></p>
+	<p><a href="twitch.tv/ESL_CSGO">ESL_CSGO</a>&nbsp;&nbsp;&nbsp;&nbsp;<a href="twitch.tv/riotgames">Riot Games</a>&nbsp;&nbsp;&nbsp;&nbsp;<a href="twitch.tv/xianheroolz">xianheroolz</a></p>
 
-    var_dump($_POST);
+</body>
+</html>
 
-
-
-    $dbhost = $_SERVER['dirtybase.c0dpqj5xfw8m.us-east-1.rds.amazonaws.com'];
-    $dbport = $_SERVER['3306'];
-    $dbname = $_SERVER['dirtyBase'];
-
-    //$dsn = "mysql:host={$dbhost};port={$dbport};dbname={$dbname}";
-    //$username = $_SERVER['dBAdmin'];
-    //$password = $_SERVER['amazonisamazing'];
-
-    $dsn = 'mysql:host=dirtybase.c0dpqj5xfw8m.us-east-1.rds.amazonaws.com;port=3306;dbname=dirtyBase';
-    $username = 'dBAdmin';
-    $password = 'amazonisamazing';
-
-
-
-    //$dbh = new PDO($dsn, $username, $password);
-    try {
-        $dbh = new PDO($dsn, $username, $password);
-        echo "connected!<br>";
-    } catch(PDOException $e) {
-        die('Could not connect to the database:<br/>' . $e);
-    }
-    echo "Running query...<br>";
-
-    echo "Creating MySql commands...<br>";
-    //$stmt = $dbh->prepare('SELECT * FROM words WHERE level < 2');
-
-    //$result = $dbh->query($statement);
-
-
-    echo "retrieving bad words with a level smaller than 2...";
-    foreach($dbh->query('SELECT * FROM words WHERE level < 2') as $row) {
-        echo "<br>";
-        echo $row['level'].' '.$row['word']; //etc...
-
-    }
-
-    echo '<p><a href="twitch.php">Twitch!</a></p>'
-
-?>
