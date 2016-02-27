@@ -1,8 +1,6 @@
 // Channels to initially join
 
 
-	//window.localStorage.getItem("Chans");
-	//alert(window.chans);
 
 	var fadeDelay = 5000, // Set to false to disable chat fade
 	channels = [String(window.localStorage.getItem("Chans"))],
@@ -95,10 +93,7 @@ function setChannel() {
 	alert(String(channelName));
 	channels.push(String(channelName));
 	alert(channels);
-
-
 }
-
 */
 
 
@@ -194,18 +189,19 @@ function handleChat(channel, user, message, self) {
 		chatButton = document.createElement('button');
 	//you liked this comment
 	chatButton.addEventListener('click', function() {
-  	alert('You liked this comment!'+message);
+  	//alert('You liked this comment!'+message);
 
 
 
 		var xmlhttp;
 		xmlhttp = GetXmlHttpObject();
 		if(xmlhttp == null){
-		  alert("Boo! Your browser doesn't support AJAX!");
+		  //alert("Boo! Your browser doesn't support AJAX!");
 		  return;
 		}
 		xmlhttp.onreadystatechange = stateChanged;
-		xmlhttp.open("GET", 'http://35.9.22.102/feb21/imr%20javascript/likeMessage.php?m='+message, true);
+		xmlhttp.open("GET", 'http://35.9.22.102/Alpha/twitch/likeMessage.php?m='+message+'&c='+String(window.localStorage.getItem("Chans"))+'&u='+name, true);
+		alert('http://35.9.22.102/Alpha/twitch/likeMessage.php?m='+message+'&c='+String(window.localStorage.getItem("Chans"))+'&u='+user);
 		xmlhttp.send(null);
 
 		function stateChanged(){
@@ -282,7 +278,6 @@ function handleChat(channel, user, message, self) {
 				chatLine.dataset.faded = '';
 			}, fadeDelay);
 	}
-
 	if(chat.children.length > 50) {
 		var oldMessages = [].slice.call(chat.children).slice(0, 10);
 		for(var i in oldMessages) oldMessages[i].remove();

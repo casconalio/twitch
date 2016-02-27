@@ -7,6 +7,27 @@ figcaption, h1, h2, h3, ul, li, body, div, p, img {
     border: 0;
 }
 
+.ad1 {
+    float:left;
+    height:calc(.5625*(100vw - 375px) + 5px);
+    max-height: 725px;
+    width:calc(100% - 380px);
+    max-width: 1280px;
+}
+
+iframe[name='ads'] {
+    min-width: 200px;
+    min-height: 250px;
+    max-width: 400px;
+    max-height: 500px;
+    width: calc(20vw);
+    height: calc(25vh);
+    padding:0 0 0 0;
+    margin: 0 0 0 0;
+    float: left;
+    overflow: hidden;
+}
+
 form {
   width: 375px;
   float:right;
@@ -80,16 +101,8 @@ iframe[name='vid'] {
     padding:0;
     margin: 0;
 }
-iframe[name='ads'] {
-    max-width: 400px;
-    max-height: 500px;
-    width: calc(100vw - 900px);
-    height: 100vh;
-    margin: calc(.5625*(100vw - 375px)) 0 10px 0;
-    padding:0 0 0 0;
-    float: left;
-    overflow: hidden;
-}
+
+
 
 .titleBar {
   width: 375px;

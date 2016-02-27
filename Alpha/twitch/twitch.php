@@ -2,7 +2,7 @@
 
 session_start();
 define("TWITCH_SESSION", 'twitch');
-//unset($_SESSION['channelName']);
+unset($_SESSION['channelName']);
 //exit;
 $nick = "xianheroolz"; //user ID
 $pass = "oauth:hk46xza9ye3hmjbjerod8bq86zybqa"; //password
@@ -87,18 +87,16 @@ function test_input($data) {
 <form method="post">
   <div class="topComments">
     <p>Top Comments</p>
-    <iframe id='topCmts' name='topCmts' src="getComments.php">
+    <iframe id='topCmts' name='topCmts' src="getComments.php?c=<?php echo $channel;?>">
     </iframe>
   </div>
 
 <div class = "chat">
-
   <div class = "titleBar">
       <hr>
     <a href="#">
       <input type="image" src="images/PowerIcon.png" alt="Menu" height="20" width="20" onclick="setChannel()">
-      <script id="main" src="main.js"></script>
-
+      <script src="main.js"></script>
     </a>
     <p><input type="text" id="Channel" name="Channel" placeholder="Channel" value="<?php echo $channel;?>"></p>
     <hr>

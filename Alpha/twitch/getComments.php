@@ -4,6 +4,11 @@
 $dsn = 'mysql:host=messagebase.c0dpqj5xfw8m.us-east-1.rds.amazonaws.com;port=3306;dbname=messageBase';
 $username = 'dBAdmin';
 $password = 'amazonisamazing';
+$channel;
+
+if (isset($_REQUEST['c'])){
+    $channel = $_REQUEST['c'];
+}
 
 $dbh = new PDO($dsn, $username, $password);
 
@@ -32,21 +37,20 @@ try {
 <meta http-Equiv="Cache-Control" Content="no-cache">
 <meta http-Equiv="Pragma" Content="no-cache">
 <meta http-Equiv="Expires" Content="0">
-<meta http-equiv="refresh" content="5">
+<meta http-equiv="refresh" content="0.00001">
 </head>
 
 <body>
 <div class="topComments">
-  <p>
     <?php
-    foreach($dbh->query('SELECT * FROM likedMessages') as $row) {
-        echo "<br>";
-        echo "<p>".$row['ID'].' '.$row['message']."</p>"; //etc...
+    echo '<br>';
+    $i = 0;
+    $dbh->query('DELETE FROM '.$channel.' WHERE timeSent < NOW()-INTERVAL 20 SECOND and message<>""');
+    foreach($dbh->query('SELECT * FROM '.$channel.' ORDER BY likes DESC LIMIT 5') as $row) {
+        $i++;
+        echo '<div class = top'.$i.'><p>'.$i.'. '.$row['username'].': '.$row['message'].'   ('.$row['likes'].' likes'.')</p></div>'; //etc...
     }
-
     ?>
-
-  </p>
 </div>
 </body>
 </html>
