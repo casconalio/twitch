@@ -1,3 +1,6 @@
+![twitch](http://35.9.22.102/assets/img/twitch.png)
+
+
 Team Amazon
 ------
 Capstone Twitch.tv project
@@ -28,17 +31,3 @@ twitch_mod
 www
 > Team Amazon homepage
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-![twitch](http://35.9.22.102/assets/img/twitch.png)
