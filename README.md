@@ -41,4 +41,4 @@ www
 
 
 
-![Image of Yaktocat](https://octodex.github.com/images/nyantocat.gif)
+![twitch](http://35.9.22.102/assets/img/twitch.png)
