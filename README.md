@@ -1,4 +1,4 @@
-### Team Amazon
+### :sparkles::sparkles::sparkles:Team Amazon:sparkles::sparkles::sparkles:
 Capstone Twitch.tv project
 
 
