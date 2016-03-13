@@ -1,6 +1,7 @@
-### :sparkles::sparkles::sparkles:Team Amazon:sparkles::sparkles::sparkles:
+### Team Amazon
 Capstone Twitch.tv project
 
+Folders:
 
 Advertisements Php
 > Advertisement keywords sending and receiving scripts
@@ -26,4 +27,17 @@ twitch_mod
 www
 > Team Amazon homepage
 
-![Image of Yaktocat](https://octodex.github.com/images/nyantocat.gif)
+
+
+
+
+
+
+
+
+
+
+
+
+
+>![Image of Yaktocat](https://octodex.github.com/images/nyantocat.gif)
