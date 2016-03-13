@@ -1,4 +1,4 @@
-### twitch
+### Team Amazon
 Capstone Twitch.tv project
 
 
@@ -25,3 +25,5 @@ twitch_mod
 
 www
 > Team Amazon homepage
+
+![Image of Yaktocat](https://octodex.github.com/images/nyantocat.gif)
