@@ -1,4 +1,8 @@
 <?php
+
+// http://getWord.php?c=
+// add channel name behind the link above
+
 $dsn = 'mysql:host=adv.c0dpqj5xfw8m.us-east-1.rds.amazonaws.com;port=3306;dbname=AdvKeyWords';
 $username = 'dbadmin';
 $password = 'amazonisamazing';
@@ -20,6 +24,6 @@ try {
 //the query below gets the most popular word
 foreach($dbh->query('SELECT * FROM '.$channel.' ORDER BY frequency DESC LIMIT 1') as $row) {
     echo "<br>";
-    echo $row['timeSent'].' '.$row['word'].' '.$row['frequency'];
+    echo $row['word'];
 }
 ?>
