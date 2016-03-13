@@ -1,7 +1,8 @@
 ### Team Amazon
+=====
 Capstone Twitch.tv project
 
-Folders:
+##### Folders:
 
 Advertisements Php
 > Advertisement keywords sending and receiving scripts
@@ -40,4 +41,4 @@ www
 
 
 
->![Image of Yaktocat](https://octodex.github.com/images/nyantocat.gif)
+![Image of Yaktocat](https://octodex.github.com/images/nyantocat.gif)
