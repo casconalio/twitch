@@ -1,5 +1,5 @@
 Team Amazon
-_____
+------
 Capstone Twitch.tv project
 
 ##### Folders:
