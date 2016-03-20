@@ -83,11 +83,10 @@ function test_input($data) {
     </iframe>
 <div class="main">
 
-
 <form method="post">
   <div class="topComments">
     <p>Top Comments</p>
-    <iframe id='topCmts' name='topCmts' src="getComments.php?c=<?php echo $channel;?>">
+    <iframe id='topCmts' name='topCmts' src="topComments.php">
     </iframe>
   </div>
 

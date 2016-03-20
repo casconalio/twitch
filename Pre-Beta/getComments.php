@@ -44,7 +44,7 @@ try {
     <?php
     echo '<br>';
     $i = 0;
-    //$dbh->query('DELETE FROM '.$channel.' WHERE timeSent < NOW()-INTERVAL 20 SECOND and message<>""');
+    $dbh->query('DELETE FROM '.$channel.' WHERE timeSent < NOW()-INTERVAL 20 SECOND and message<>""');
     //$res = $dbh->query('SELECT * FROM '.$channel.' ORDER BY likes DESC LIMIT 5');
     $result = array();
 
