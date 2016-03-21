@@ -1,0 +1,38 @@
+<!doctype html>
+<!--
+ This page is shown when the extension button is clicked, because the
+ "browser_action" field in manifest.json contains the "default_popup" key with
+ value "popup.html".
+ -->
+<html>
+  <head>
+    <title>Twitch Enhancement Plug-in</title>
+    <script src="popup.js"></script>
+    <style>
+        body {background-color: white;
+            width: 300px;
+            height: 500px;
+            }
+        h1   {color:blue;}
+        p    {color:green;}
+        .comments {
+            margin: 0.5em;
+            background-color: lightgrey;
+            height: auto;
+            width: auto;
+        }
+    </style>
+  </head>
+
+  <header>
+      <img src="pictures/twitchtvbanner.png" alt="Twitch TV Banner" style="width:300px;height:67px;">
+  </header>
+
+
+  <body>
+      <h3>Hot Comments</h3>
+      <div class="comments">
+
+      </div>
+  </body>
+</html>
