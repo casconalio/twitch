@@ -9,9 +9,6 @@
     "default_icon": "images/icon.png",
     "default_popup": "popup.html"
   },
-  /*"background": {
-    "scripts": ["background.js"]
-  },*/
   "icons" : {
       "64" : "images/icon.png"
   },
