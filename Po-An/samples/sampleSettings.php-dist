@@ -1,0 +1,6 @@
+<?php
+define('AWS_API_KEY', 'AKIAJU3VVP2BZIY3Q7PQ');
+define('AWS_API_SECRET_KEY', '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');
+define('AWS_ASSOCIATE_TAG', 't0f44b-20');
+define('AWS_ANOTHER_ASSOCIATE_TAG', 't0f44b-20');
+

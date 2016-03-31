@@ -200,14 +200,14 @@ function handleChat(channel, user, message, self) {
 		  return;
 		}
 		xmlhttp.onreadystatechange = stateChanged;
-		xmlhttp.open("GET", 'http://35.9.22.102/Alpha/twitch/likeMessage.php?m='+message+'&c='+String(window.localStorage.getItem("Chans"))+'&u='+name, true);
-		alert('http://35.9.22.102/Alpha/twitch/likeMessage.php?m='+message+'&c='+String(window.localStorage.getItem("Chans"))+'&u='+user);
+		xmlhttp.open("GET", 'http://35.9.22.102/Alpha/twitch/likeMessage.php?m='+message+'&c='+channel+'&u='+user, true);
+		//alert('http://35.9.22.102/Alpha/twitch/likeMessage.php?m='+message+'&c='+channel+'&u='+user);
 		xmlhttp.send(null);
 
 		function stateChanged(){
 		  if(xmlhttp.readyState == 4){
 		    // do something with the response text
-		    alert(xmlhttp.responseText);
+		    //alert(xmlhttp.responseText);
 		  }
 		}
 		function GetXmlHttpObject(){

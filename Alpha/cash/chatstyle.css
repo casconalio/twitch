@@ -1,0 +1,169 @@
+html, body, header, footer, nav, article, section, figure,
+figcaption, h1, h2, h3, ul, li, body, div, p, img {
+    margin: 0;
+    padding: 0;
+    font-size: 100%;
+    vertical-align: baseline;
+    border: 0;
+}
+
+.ad1 {
+    float:left;
+    height:calc(.5625*(100vw - 375px) + 5px);
+    max-height: 725px;
+    width:calc(100% - 380px);
+    max-width: 1280px;
+}
+
+iframe[name='ads'] {
+    max-width: 400px;
+    max-height: 600px;
+    width: calc(100vw - 900px);
+    height: 100vh;
+    margin: calc(.5625*(100vw - 375px)) 0 10px 0;
+    padding:0 0 0 0;
+    float: left;
+    overflow: hidden;
+}
+
+form {
+  width: 375px;
+  float:right;
+}
+
+iframe {
+    border: none;
+    overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: hidden;
+}
+
+.usr {
+  font-weight: bold;
+  color: #595959;
+  display: inline;
+}
+
+.msg {
+  color: #999999;
+  display: inline;
+}
+
+.video {
+
+}
+
+.topComments {
+  height: 150px;
+  color: black;
+  background-color: #f2f2f2;
+  margin-right: auto;
+  margin-left: auto;
+  min-width: 375px;
+  width: 100%;
+}
+.topComments > p {
+  text-align: left;
+  font-family: "arial";
+  font-size: 0.9em;
+  padding-top: 0.5em;
+  padding-left: 0.5em;
+}
+
+.mychat {
+  min-width: 375px;
+  max-height: 100vh;
+  width: 100%;
+  height: 80%;
+  background-color: #f2f2f2;
+}
+
+.cmnts {
+  width: 375px;
+  height: calc(100vh - 300px);
+  overflow-y: scroll;
+  overflow-x: hidden;
+}
+
+iframe[name='topCmts'] {
+  width: 375px;
+}
+
+iframe[name='vid'] {
+    position: absolute;
+    width:calc(100% - 395px);
+    height: calc(.5625*(100vw - 375px));
+    float: left;
+    padding-left:.5em;
+    padding-right:.5em;
+    margin: 0;
+}
+
+.titleBar {
+  width: 375px;
+  padding-top: 1em;
+  padding-bottom: 0.1em;
+}
+
+.titleBar > a {
+  position: absolute;
+  width: 25px;
+  display: inline-block;
+  padding-left: 0.5em;
+  padding-right: 0.5em;
+  float: left;
+  z-index: 2;
+}
+
+.titleBar > p {
+  font-family: "arial";
+  width: 375px;
+  text-align: center;
+  font-size: 0.9em;
+  display: inline-block;
+  z-index: -1;
+  padding-bottom: 0em;
+}
+
+.comments {
+  align-content: center;
+  height: calc(100vh - 300px);
+  width: 370px;
+}
+
+
+.message {
+  width:350px;
+  margin:0 auto;
+}
+
+textarea {
+  font-size: 0.9em;
+  width:345px;
+  height: 20px;
+  resize: none;
+}
+
+input[name="up"]{
+  width: 20px;
+  height: 20px;;
+
+}
+
+.send > input[type="submit"] {
+    float: right;
+    background-color: #6441a5;
+    line-height: normal;
+    text-align: center;
+    font-size: 1em;
+    font-weight: bold;
+    font-family: "arial";
+    color: white;
+    width: 60px;
+    height: 30px;
+    padding: 5px;
+    margin-top: 5px;
+    margin-right: 12px;
+    vertical-align: middle;
+    line-height: normal;
+}

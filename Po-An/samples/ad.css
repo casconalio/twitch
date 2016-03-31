@@ -1,0 +1,90 @@
+html, body, header, footer, nav, article, section, figure,
+figcaption, h1, h2, h3, ul, li, body, div, p, img {
+    margin: 0;
+    padding: 0;
+    font-size: 100%;
+    vertical-align: baseline;
+    border: 0;
+}
+.ad-container {
+    font-family: "Times New Roman", sans-serif;
+    width: 370px;
+    height: 200px;
+    /*border : 1px solid black;*/
+}
+.popularity {
+    position: absolute;
+    width: 30px;
+    height: 200px;
+    /*border : 1px solid black;*/
+    float:left;
+    text-align:center;
+}
+.ad {
+    position: absolute;
+    margin: 10px 0 10px 30px;
+    width: 340px;
+    height: 180px;
+    border : 1px solid silver;
+    float:left;
+    background-color: lightgrey;
+}
+.pic, .ad-pic{
+    position: absolute;
+    width: 150px;
+    height: 180px;
+    display: block;
+    float:left;
+}
+.text{
+    position: absolute;
+    margin-left: 150px;
+    width: 190px;
+    height: 180px;
+    /*border : 1px solid blue;*/
+    float:left;
+
+}
+.title{
+    position: absolute;
+    width: 190px;
+    height: 135px;
+    /*border : 1px solid blue;*/
+    text-align:center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    font-size: 12px;
+}
+.price{
+    position: absolute;
+    margin-top: 135px;
+    width: 190px;
+    height: 45px;
+    /*border : 1px solid blue;*/
+    text-align: center;
+}
+.ad:hover{
+    border : 3px solid silver;
+}
+.thumb{
+    margin-top: 10px;
+    width: 20px;
+    height: 20px;
+    display:inline-block;
+}
+
+.light{
+    width: 16px;
+    height: 5px;
+    display:inline-block;
+}
+
+a:link{
+    color: black;
+}
+
+a:visited{
+    color: black;
+}
