@@ -10,41 +10,41 @@ figcaption, h1, h2, h3, ul, li, body, div, p, img {
 
 .top1 {
   color: #6441a5;
-  padding-left: 0.5em;
+  padding: 0.5em;
   font-family: "arial";
   font-size: 1em;
 }
 
 .top2 {
   color: #7556af;
-  padding-left: 0.5em;
+  padding: 0.5em;
   font-family: "arial";
   font-size: 1em;
 }
 
 .top3 {
   color: #866bb9;
-  padding-left: 0.5em;
+  padding: 0.5em;
   font-family: "arial";
   font-size: 1em;
 }
 
 .top4 {
   color: #9780c3;
-  padding-left: 0.5em;
+  padding: 0.5em;
   font-family: "arial";
   font-size: 1em;
 }
 
 .top5 {
   color: #a895cd;
-  padding-left: 0.5em;
+  padding: 0.5em;
   font-family: "arial";
   font-size: 1em;
 }
 
 p {
-  padding-left: 0.5em;
+  padding: 0.5em;
   font-family: "arial";
   font-size: 1em;
 }

@@ -33,16 +33,68 @@ try {
     }
 </script>
 <title>Chat</title>
-<link rel="stylesheet" type="text/css" href="topCmtStyle.css">
 <meta http-Equiv="Cache-Control" Content="no-cache">
 <meta http-Equiv="Pragma" Content="no-cache">
 <meta http-Equiv="Expires" Content="0">
+<style>
+html, body, header, footer, nav, article, section, figure,
+figcaption, h1, h2, h3, ul, li, body, div, p, img {
+    margin: 0;
+    padding: 0;
+    font-size: 100%;
+    vertical-align: baseline;
+    border: 0;
+}
+
+
+.top1 {
+  color: #6441a5;
+  padding-left: 0.5em;
+  font-family: "arial";
+  font-size: 1em;
+}
+
+.top2 {
+  color: #7556af;
+  padding-left: 0.5em;
+  font-family: "arial";
+  font-size: 1em;
+}
+
+.top3 {
+  color: #866bb9;
+  padding-left: 0.5em;
+  font-family: "arial";
+  font-size: 1em;
+}
+
+.top4 {
+  color: #9780c3;
+  padding-left: 0.5em;
+  font-family: "arial";
+  font-size: 1em;
+}
+
+.top5 {
+  color: #a895cd;
+  padding-left: 0.5em;
+  font-family: "arial";
+  font-size: 1em;
+}
+
+p {
+  padding-left: 0.5em;
+  font-family: "arial";
+  font-size: 1em;
+}
+
+</style>
 </head>
 
 <body>
 <div class="topComments">
     <?php
-    echo '<br>';
+    
     $i = 0;
     $dbh->query('DELETE FROM '.$channel.' WHERE timeSent < NOW()-INTERVAL 20 SECOND and message<>""');
     //$res = $dbh->query('SELECT * FROM '.$channel.' ORDER BY likes DESC LIMIT 5');

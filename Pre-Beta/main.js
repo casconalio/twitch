@@ -13,6 +13,8 @@
 	showHosting = true, // Show when the channel is hosting or not
 	showConnectionNotices = true, // Show messages like "Connected" and "Disconnected"
 	channelSet = false;
+	blnScroll = true;
+	var numViewers;
 	//channels = window.chans;
 	//chan = window.localStorage.getItem("Chans");
 
@@ -44,7 +46,7 @@
 	client.addListener('timeout', timeout);
 	client.addListener('clearchat', clearChat);
 	client.addListener('hosting', hosting);
-	client.addListener('unhost', function(channel, viewers) { hosting(channel, null, viewers, true) });
+	client.addListener('unhost', function(channel, viewers) { hosting(channel, null, viewers, true); numViewers = viewers; });
 
 	client.addListener('connecting', function (address, port) {
 			if(showConnectionNotices) chatNotice('Connecting', 1000, -4, 'chat-connection-good-connecting');
@@ -67,7 +69,12 @@
 		});
 	client.addListener('join', function (channel, username) {
 			if(username == client.getUsername()) {
-				if(showConnectionNotices) chatNotice('Joined ' + capitalize(dehash(channel)), 1000, -1, 'chat-room-join');
+				if(showConnectionNotices){
+					chatNotice('Joined ' + capitalize(dehash(channel)), 1000, -1, 'chat-room-join');
+				}
+				else{
+					chatNotice('Couldn\'t join ' + capitalize(dehash(channel)), 1000, -1, 'chat-room-join');
+				}
 				joinAccounced.push(channel);
 			}
 		});
@@ -185,7 +192,7 @@ function handleChat(channel, user, message, self) {
 		chatChannel = document.createElement('span'),
 		chatName = document.createElement('span'),
 		chatColon = document.createElement('span'),
-		chatMessage = document.createElement('span');
+		chatMessage = document.createElement('span'),
 		chatButton = document.createElement('button');
 	//you liked this comment
 	chatButton.addEventListener('click', function() {
@@ -201,13 +208,13 @@ function handleChat(channel, user, message, self) {
 		}
 		xmlhttp.onreadystatechange = stateChanged;
 		xmlhttp.open("GET", 'http://35.9.22.102/Alpha/twitch/likeMessage.php?m='+message+'&c='+String(window.localStorage.getItem("Chans"))+'&u='+name, true);
-		alert('http://35.9.22.102/Alpha/twitch/likeMessage.php?m='+message+'&c='+String(window.localStorage.getItem("Chans"))+'&u='+user);
+		alert('http://35.9.22.102/Alpha/twitch/likeMessage.php?m='+message+'&c='+String(window.localStorage.getItem("Chans"))+'&u='+name);
 		xmlhttp.send(null);
 
 		function stateChanged(){
 		  if(xmlhttp.readyState == 4){
 		    // do something with the response text
-		    alert(xmlhttp.responseText);
+		    //alert(xmlhttp.responseText);
 		  }
 		}
 		function GetXmlHttpObject(){
@@ -271,6 +278,16 @@ function handleChat(channel, user, message, self) {
 	chatLine.appendChild(chatMessage);
 
 	chat.appendChild(chatLine);
+
+	document.getElementById("chat").onmouseover = function(){
+		blnScroll = false;
+	}
+	document.getElementById("chat").onmouseout = function(){
+		blnScroll = true;
+	}
+	if(blnScroll){
+		window.scrollTo(0,(document.getElementById("chat").scrollHeight+1000));
+	}
 
 
 	/*if(typeof fadeDelay == 'number') {
@@ -356,4 +373,8 @@ function hosting(channel, target, viewers, unhost) {
 	else {
 		chatNotice(chan + ' is no longer hosting.', null, null, 'chat-hosting-no');
 	}
+}
+
+function getViewers(){
+	return numViewers;
 }

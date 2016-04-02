@@ -11,9 +11,14 @@ $port = 6667; //port
 $sock =@ fsockopen($host, $port); //open connection
 $channel = ""; //channel
 $message = ""; //channel
+$blnChannelSet = false;
 
 if(isset($_SESSION['channelName'])) {
     $channel = test_input($_SESSION['channelName']); // getting the text in that input field
+}
+else if(isset($_REQUEST['c'])){
+    $channel = strip_tags($_REQUEST['c']);
+    $blnChannelSet = true;
 }
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
@@ -33,94 +38,165 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
 //make sure the input is good
 function test_input($data) {
-   $data = trim($data);
-   $data = stripslashes($data);
-   $data = htmlspecialchars($data);
-   return $data;
+    $data = trim($data);
+    $data = stripslashes($data);
+    $data = htmlspecialchars($data);
+    return $data;
 }
+
+function get_url_contents($url){
+    $crl = curl_init();
+    $timeout = 5;
+    curl_setopt ($crl, CURLOPT_URL,$url);
+    curl_setopt ($crl, CURLOPT_RETURNTRANSFER, 1);
+    curl_setopt ($crl, CURLOPT_CONNECTTIMEOUT, $timeout);
+    $ret = curl_exec($crl);
+    curl_close($crl);
+    return $ret;
+}
+
+function post_url_contents($url, $fields) {
+
+    foreach($fields as $key=>$value) { $fields_string .= $key.'='.urlencode($value).'&'; }
+    rtrim($fields_string, '&');
+
+    $crl = curl_init();
+    $timeout = 5;
+
+    curl_setopt($crl, CURLOPT_URL,$url);
+    curl_setopt($crl,CURLOPT_POST, count($fields));
+    curl_setopt($crl,CURLOPT_POSTFIELDS, $fields_string);
+
+    curl_setopt ($crl, CURLOPT_RETURNTRANSFER, 1);
+    curl_setopt ($crl, CURLOPT_CONNECTTIMEOUT, $timeout);
+    $ret = curl_exec($crl);
+    curl_close($crl);
+    return $ret;
+}
+
 ?>
 
 <!DOCTYPE html>
 <html>
 <head>
-<script type=text/javascript>
-    function scroll(){
-        var a = document.getElementById('cmnts').contentWindow;
-        a.scrollTo(0,200);
-    }
-</script>
+    <meta charset="UTF-8">
+    <script type=text/javascript>
+        var chans;
+        function setChannel(i) {
+            chans = "";
+            var channelName = document.getElementById("Channel").value;
+            chans = channelName;
+            window.localStorage.setItem("Chans", chans);
+        }
+    </script>
 
-<script type=text/javascript>
-    var chans;
-    function setChannel() {
-      chans = "";
-    	var channelName = document.getElementById("Channel").value;
-      chans = channelName;
-      window.localStorage.setItem("Chans", chans);
-    	//alert(window.localStorage.getItem("Chans"));
-    }
-</script>
-
-<title>Chat</title>
-<link rel="stylesheet" type="text/css" href="chatstyle.css">
-<meta http-Equiv="Cache-Control" Content="no-cache">
-<meta http-Equiv="Pragma" Content="no-cache">
-<meta http-Equiv="Expires" Content="0">
+    <title>Chat</title>
+    <link rel="stylesheet" type="text/css" href="chatstyle.css">
+    <link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.4.0/css/font-awesome.min.css">
+    <meta http-Equiv="Cache-Control" Content="no-cache">
+    <meta http-Equiv="Pragma" Content="no-cache">
+    <meta http-Equiv="Expires" Content="0">
 </head>
 
 <header>
 </header>
 
 <body>
+<div class="purple">
+</div>
+    <span class="banner">
+    <?php
+    if(isset($_SESSION['channelName']) || isset($_REQUEST['c'])) {
+        $viewers = 0;
+        $summary = "https://api.twitch.tv/kraken/streams?channel=" . $channel;
+        $json = get_url_contents($summary);
+        $json = json_decode($json, true);
+        $info = $json["streams"][0];
+        $viewers = $info["viewers"];
+        //echo "viewers: ".$viewers;
+        //echo ", game: ".$info["game"];
+        //echo ", status: ".$info["channel"]["status"];
+        //echo ", name: ".$info["channel"]["display_name"];
+        echo '<img src="'.$info["channel"]["logo"].'" alt="channel_logo">';
+        echo '<p class="title">'.$info["channel"]["status"].'</p>';
+        echo '<p class="info">'.$info["channel"]["display_name"]." playing ".$info["game"].'</p>';
+    }
+    ?>
+    </span>
     <iframe name="vid"
         <?php echo 'src="http://player.twitch.tv/?channel='.$channel.'"'; ?>
-
             frameborder="0"
             scrolling="no"
             allowfullscreen="true">
     </iframe>
-    <iframe src="http://35.9.22.102/Po-An/samples/test.php" name="ads" scrolling="no">
-    </iframe>
-<div class="main">
+    <span class="toolbar">
+    <?php
+    if(isset($_SESSION['channelName']) || isset($_REQUEST['c'])) {
+        echo "<p> ".$viewers."&nbsp<i class=\"fa fa-eye\"></i> &nbsp&nbsp&nbsp".$info["channel"]["views"]."&nbsp<i class=\"fa fa-group\"></i>&nbsp&nbsp&nbsp ".$info["channel"]["followers"]." &nbsp<i class=\"fa fa-heart\"></i> </p>";
 
-<form method="post">
-  <div class="topComments">
-    <p>Top Comments</p>
-    <iframe id='topCmts' name='topCmts' src="topComments.php">
-    </iframe>
-  </div>
+    }
+    ?>
+    </span>
+    <div class="main">
 
-<div class = "chat">
-  <div class = "titleBar">
-      <hr>
-    <a href="#">
-      <input type="image" src="images/PowerIcon.png" alt="Menu" height="20" width="20" onclick="setChannel()">
-      <script src="main.js"></script>
-    </a>
-    <p><input type="text" id="Channel" name="Channel" placeholder="Channel" value="<?php echo $channel;?>"></p>
-    <hr>
-  </div>
+        <form method="post">
+            <div class="topComments">
+                <p>Top Comments</p>
+                <iframe id='topCmts' name='topCmts' src="topComments.php">
+                </iframe>
+            </div>
 
-<?php $url = "index.html"; ?>
+            <div class="ad">
+                <iframe name='ads'
+                    <?php
+                    if(isset($_SESSION['channelName']) || isset($_REQUEST['c'])) {
+                        echo 'src="http://35.9.22.102/new_ad/test.php"';
+                    }else{
+                        echo 'src="http://35.9.22.102/new_ad/test.php"';
+                    }
+                    ?>
+                        scrolling="no">
+                </iframe>
+            </div>
 
-  <div class = "comments">
-      <?php
-      if (isset($_SESSION['channelName'])) {
-          echo "<iframe id='cmtns' name='cmnts' src=$url scrolling='auto'></iframe>";
-          unset($_SESSION['channelName']);
-      }
-      else{
-          echo " Please input a channel...";
-          unset($_SESSION['channelName']);
-      }
-       ?>
-  </div>
+            <div class = "mychat">
+                <div class = "titleBar">
+                    <hr>
+                    <a href="#">
+                        <input type="image" src="images/PowerIcon.png" alt="Menu" height="20" width="20" onclick="setChannel(true)">
+                        <script src="main.js"></script>
+                    </a>
+                    <p><input type="text" id="Channel" name="Channel" placeholder="Channel" value="<?php echo $channel;?>"></p>
+                    <hr>
+                </div>
 
-  <?php $url = 'send.php?c='.$channel;
-  echo "<iframe name='msg' src=$url width='375' height='65'></iframe>";
-  ?>
-</div>
-</form>
-</div>
+                <?php
+                $url = "index.html";
+                if($blnChannelSet){
+                    echo '<script type="text/javascript">setChannel(false)</script>';
+                }
+                ?>
+
+                <div class = "comments">
+                    <?php
+                    if (isset($_SESSION['channelName']) || isset($_REQUEST['c'])) {
+                        echo "<iframe id='cmtns' name='cmnts' src=$url scrolling='auto'></iframe>";
+                        unset($_SESSION['channelName']);
+                    }
+                    else{
+                        echo " Please input a channel...";
+                        unset($_SESSION['channelName']);
+                    }
+                    ?>
+                </div>
+
+                <div class="send-message">
+                    <?php $url = 'send.php?c='.$channel;
+                    echo "<iframe name='msg' src=$url width='375' height='61'></iframe>";
+                    ?>
+                </div>
+            </div>
+        </form>
+    </div>
 </body>
 </html>

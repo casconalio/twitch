@@ -5,8 +5,18 @@ session_start();
 //unset($_SESSION['channelName']);
 //exit;
 set_time_limit(0);
-$nick = "xianheroolz"; //user ID
-$pass = "oauth:hk46xza9ye3hmjbjerod8bq86zybqa"; //password
+//$nick = "xianheroolz"; //user ID
+//$pass = "oauth:hk46xza9ye3hmjbjerod8bq86zybqa"; //password
+
+//$nick = "xianhesuxandcashroolz";
+//$pass = "oauth:ds0kvzvp79y5xnpi6o0istcccqpfl8";
+
+$nick = $_SESSION["username"];
+$pass = $_SESSION["pass"];
+
+//echo $nick;
+
+
 $host = "irc.twitch.tv"; //host
 $port = 6667; //port
 $sock = @fsockopen($host, $port); //open connection

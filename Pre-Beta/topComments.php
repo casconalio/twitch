@@ -22,7 +22,7 @@
   	  setTimeout( function() {
   	  getAjax();
   	  done();
-  	  }, 200);
+    }, 1000);
   }
 
   function getAjax() {

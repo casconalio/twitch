@@ -2,7 +2,7 @@ html,body {
 	font-family: 'Roboto', sans-serif;
 	  background-color: #f2f2f2;
 	color: hsla(0, 0%, 12%, .95);
-	font-size: 24px;
+	font-size: 16px;
 }
 #chat {
 	left: 0;
@@ -102,12 +102,13 @@ html,body {
 }
 
 .chat-button {
-	background:url(upvote.png) no-repeat;
-	background-size: 20px auto;
-	border: 2px solid #black; /* Green */
-	height: 24px;
-	width: 24px;
-	margin-right: 4px;
+	background:url(arrowUp.png) no-repeat;
+	background-size: 15px 20px;
+	/*border: 0px solid #black; */
+	height: 19px;
+	width: 15px;
+	margin-right: 2px;
+	border: none;
 }
 
 
