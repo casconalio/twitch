@@ -98,6 +98,11 @@ void createCommentTableForChannel(std::string& channelName, sql::Statement* stmt
 	stmt->execute("CREATE TABLE " + channelName + "(Timestamp int primary key not null, message varchar(500), username varchar(25), likes int)");
 }
 
+void resetPopularityIPTable(sql::Statement* stmt){
+  std::cout << "Resetting Popularity IP table..." << std::endl;
+  stmt->execute("DELETE FROM Popularity");
+}
+
 void createAdTableForChannel(std::string& channelName, sql::Connection* con, sql::Statement* stmt){
   sql::PreparedStatement *pstmt;
 	stmt->execute("DROP TABLE IF EXISTS " + channelName);
@@ -109,6 +114,7 @@ void createAdTableForChannel(std::string& channelName, sql::Connection* con, sql
 }
 
 void writeAdKeywordToDatabase(std::string& keyword, std::string& channelName, sql::Connection* con, sql::Statement* stmt, sql::ResultSet* res){
+  resetPopularityIPTable(stmt);
 	sql::PreparedStatement *pstmt;
   pstmt = con->prepareStatement("UPDATE " + channelName + " SET Keyword='" + keyword + "', clicks=0");
 	pstmt->executeUpdate();
