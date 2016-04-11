@@ -1,15 +1,17 @@
 /* TODO: which of these #include's can be removed, if any? */
 #include <iostream>
-#include <fstream>
 #include <string>
 #include <vector>
-#include <functional>
 #include <time.h>
-#include <algorithm>
 #include <sstream>
 #include "mysql_driver.h"
 #include <cppconn/prepared_statement.h>
 
+#define              COMMENT_UPDATE_RATE_MS 1000
+#define		             	  AD_UPDATE_RATE_MS 10000
+#define                  MAX_AD_LIFETIME_MS 60000
+
+#define               POPULARITY_MULTIPLIER 100
 
 #define		            COMMENT_DATABASE_NAME "messageBase"
 #define           COMMENT_DATABASE_USERNAME "dBAdmin"
@@ -26,12 +28,6 @@
 #define	STREAM_AUDIO_TEXT_DATABASE_USERNAME "dbadmin"
 #define STREAM_AUDIO_TEXT_DATABASE_PASSWORD "amazonisamazing"
 #define STREAM_AUDIO_TEXT_DATABASE_ENDPOINT "adv.c0dpqj5xfw8m.us-east-1.rds.amazonaws.com"
-
-#define              COMMENT_UPDATE_RATE_MS 1000
-#define		             	  AD_UPDATE_RATE_MS 10000
-#define                  MAX_AD_LIFETIME_MS 60000
-
-#define               POPULARITY_MULTIPLIER 100
 
 std::string toLower(std::string input){
 	std::string result = "";
@@ -92,14 +88,32 @@ std::string getStreamAudioText(std::string& channelName, sql::Connection* con, s
 	return result;
 }
 
-void createCommentTableForChannel(std::string& channelName, sql::Statement* stmt){
-	stmt->execute("DROP TABLE IF EXISTS " + channelName);
-	stmt->execute("CREATE TABLE " + channelName + "(Timestamp int primary key not null, message varchar(500), username varchar(25), likes int)");
+std::string space2underscore(std::string text) {
+    for(std::string::iterator it = text.begin(); it != text.end(); ++it) {
+        if(*it == ' ') {
+            *it = '_';
+        }
+    }
+    return text;
 }
 
-void resetPopularityIPTable(std::string& channelName, sql::Statement* stmt){
+std::string replaceChar(std::string str, char ch1, char ch2) {
+  for (int i = 0; i < str.length(); ++i) {
+    if (str[i] == ch1)
+      str[i] = ch2;
+  }
+
+  return str;
+}
+
+void createCommentTableForChannel(std::string& channelName, sql::Statement* stmt){
+	//stmt->execute("DROP TABLE IF EXISTS " + channelName);
+	stmt->execute("CREATE TABLE IF NOT EXISTS " + channelName + "(timeSent TIMESTAMP, message varchar(512) PRIMARY KEY, likes INT, username VARCHAR(45), rgb VARCHAR(20))");
+}
+
+void resetPopularityIPTable(std::string& channelName, sql::Statement* stmt, std::string& currentKeyword){
   std::cout << "Resetting Popularity IP table..." << std::endl;
-  stmt->execute("DROP TABLE IF EXISTS " + channelName + "Popularity");
+  stmt->execute("DROP TABLE IF EXISTS " + channelName + space2underscore(currentKeyword) + "Popularity");
 }
 
 void createAdTableForChannel(std::string& channelName, sql::Connection* con, sql::Statement* stmt){
@@ -113,7 +127,12 @@ void createAdTableForChannel(std::string& channelName, sql::Connection* con, sql
 }
 
 void writeAdKeywordToDatabase(std::string& keyword, std::string& channelName, sql::Connection* con, sql::Statement* stmt, sql::ResultSet* res){
-  resetPopularityIPTable(channelName, stmt);
+  if(keyword == "") { keyword = "null"; }
+  const char filler = '_';
+  keyword.resize(40, filler);
+  keyword = replaceChar(keyword, '\'', '_');
+  std::cout << "Writing " << keyword << " KEYWORD to database..." << std::endl;
+  resetPopularityIPTable(channelName, stmt, keyword);
 	sql::PreparedStatement *pstmt;
   pstmt = con->prepareStatement("UPDATE " + channelName + " SET Keyword='" + keyword + "', clicks=0");
 	pstmt->executeUpdate();
@@ -139,6 +158,7 @@ std::vector<std::string> getFeaturedCommentsFromDatabase(std::string& channelNam
 	}
 	else{
 		std::cout << "No comments fetched from channel " << channelName << std::endl;
+    results.push_back("trash can");
 	}
  
 	return results;
@@ -164,12 +184,15 @@ double getAdPopularity(std::string& channelName, sql::Connection* con, sql::Stat
 }
 
 void updateAdvertisement(std::vector<std::string>& featuredComments, std::string& streamAudioText, std::vector<std::string>& advertisementPool, 
-	int& advertisementRotationIndex, std::string& channelName, sql::Connection* con, sql::Statement* stmt, sql::ResultSet* res, clock_t& currentAdLifetime){
+	int& advertisementRotationIndex, std::string& channelName, sql::Connection* con, sql::Statement* stmt, sql::ResultSet* res, clock_t& currentAdLifetime, int& adSource){
                std::string featuredAdvertisement;
 	        std::vector<int> scores;
 	std::vector<std::string> keywordPool, wordsInComment, wordsInStreamAudioText = stringToWords(streamAudioText), wordsAlreadyFromThisComment, wordsInAd;
 	                    bool overrideRotation = false;
                     double popularity;
+                    
+  adSource++;
+  if(adSource == 3) {adSource = 0;}	
   
   // Devnote: Establish connections here instead of having them passed in; in fact, minimize number of parameters passed in to this function.
   // Devnote: If the randomized ad is the same as the previous one, reroll.
@@ -189,8 +212,21 @@ void updateAdvertisement(std::vector<std::string>& featuredComments, std::string
 			return;
 		}
 	}
-
-	/* Randomly shuffle the advertisement pool vector to avoid bias towards one particular ad due to searching it inorder. */
+ 
+  switch(adSource){
+  case 0:
+    std::cout << "case 0" << std::endl;
+    writeAdKeywordToDatabase(featuredComments[0], channelName, con, stmt, res);
+    std::cout << "Featured comments ad keyword:: " << featuredComments[0] << std::endl;
+    break;
+  case 1:
+  std::cout << "case 1" << std::endl;
+    writeAdKeywordToDatabase(streamAudioText, channelName, con, stmt, res);
+    std::cout << "Stream audio text ad keyword: " << streamAudioText << std::endl;
+    break;
+  case 2:
+  std::cout << "case 2" << std::endl;
+  /* Randomly shuffle the advertisement pool vector to avoid bias towards one particular ad due to searching it inorder. */
 	std::random_shuffle(advertisementPool.begin(), advertisementPool.end());
  
  	/* Initialize the scores vector by populating it with zeros. */
@@ -264,6 +300,8 @@ void updateAdvertisement(std::vector<std::string>& featuredComments, std::string
 	else{
 		std::cout << "Rotation ad: " << featuredAdvertisement << std::endl;
 	}
+    break;
+  }
 }
 
 void manageStream(std::string channelName){
@@ -289,6 +327,7 @@ void manageStream(std::string channelName){
                       clock_t advertisementTimeElapsed;
                       clock_t currentAdLifetime = 0;
 							            int advertisementRotationIndex = 0;
+                          int adSource = 0;
 
 		/* Dev note: for now, we are taking a string (such as "keyboard") and iterating over every ad in the pool, asking if its title contains "keyboard". However,
 		   the way stream audio or chat text is used to lookup an ad (i.e. asking if the string "keyboard" is in the advertisement pool) would be most effecient if implemented
@@ -338,7 +377,7 @@ void manageStream(std::string channelName){
 			if (advertisementTimeElapsed >= AD_UPDATE_RATE_MS){
 				std::cout << "Updating advertisements... (" << advertisementTimeElapsed << " ms have elapsed)" << std::endl;
 				streamAudioText = getStreamAudioText(channelName, streamAudioTextConnection, streamAudioTextStatement, streamAudioTextResultSet);
-				updateAdvertisement(featuredComments, streamAudioText, advertisementKeywordPool, advertisementRotationIndex, channelName, adConnection, adStatement, adResultSet, currentAdLifetime);
+				updateAdvertisement(featuredComments, streamAudioText, advertisementKeywordPool, advertisementRotationIndex, channelName, adConnection, adStatement, adResultSet, currentAdLifetime, adSource);
 				lastAdvertisementFetch = now();
 			}
 		}
@@ -359,6 +398,6 @@ void manageStream(std::string channelName){
 }
 
 int main(int argc, const char* argv[]){
-	manageStream(toLower(std::string(argv[1]));
+	manageStream(toLower(std::string(argv[1])));
 	return 0;
 }
