@@ -17,7 +17,7 @@ if(document.getElementsByClassName("channel_new columns")[0]) {
       var channelName = setChannel();
 
       var Link       = document.createElement('a');
-      Link.href      = 'http://35.9.22.102/beta/twitch/twitch.php?c=' + channelName;
+      Link.href      = 'http://35.9.22.102/beta/twitch/index.php?c=' + channelName;
       Link.target    = '_blank';
       Link.className = 'action button js-sub-button primary subscribe-button';
       Link.setAttribute('style', 'float:left;');
@@ -26,7 +26,7 @@ if(document.getElementsByClassName("channel_new columns")[0]) {
       Container.setAttribute('id','injected');
       Container.className = 'subscribe-text';
       Container.innerHTML = 'Twitch 2.0 &nbsp';
-      
+
       Link.appendChild(Container);
       var intervalId = setInterval(inject, 500);
 }
