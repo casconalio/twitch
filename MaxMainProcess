@@ -4,25 +4,28 @@
 #include <vector>
 #include <time.h>
 #include <sstream>
+#include <cctype>
+#include <algorithm>
 #include "mysql_driver.h"
 #include <cppconn/prepared_statement.h>
 
 #define              COMMENT_UPDATE_RATE_MS 1000
-#define		             	  AD_UPDATE_RATE_MS 10000
-#define                  MAX_AD_LIFETIME_MS 60000
+#define		              AD_UPDATE_RATE_MS 10000
+#define                  MAX_AD_LIFETIME_MS 10000
 
-#define               POPULARITY_MULTIPLIER 100
+#define               POPULARITY_MULTIPLIER 300 /* The stream popularity is a ratio between ad clicks and viewers in the channel. 
+												   The larger this number, the less clicks needed to deem an ad "popular". */
 
-#define		            COMMENT_DATABASE_NAME "messageBase"
+#define		          COMMENT_DATABASE_NAME "messageBase"
 #define           COMMENT_DATABASE_USERNAME "dBAdmin"
 #define           COMMENT_DATABASE_PASSWORD "amazonisamazing"
 #define    COMMENT_DATABASE_ENDPOINT_PREFIX "tcp:/"
 #define    COMMENT_DATABASE_ENDPOINT_SUFFIX "/messagebase.c0dpqj5xfw8m.us-east-1.rds.amazonaws.com"
 
-#define			               AD_DATABASE_NAME "AdvKeyWords"
-#define		             AD_DATABASE_USERNAME "dbadmin"
-#define		             AD_DATABASE_PASSWORD "amazonisamazing"
-#define		             AD_DATABASE_ENDPOINT "adv.c0dpqj5xfw8m.us-east-1.rds.amazonaws.com"
+#define			           AD_DATABASE_NAME "AdvKeyWords"
+#define		           AD_DATABASE_USERNAME "dbadmin"
+#define		           AD_DATABASE_PASSWORD "amazonisamazing"
+#define		           AD_DATABASE_ENDPOINT "adv.c0dpqj5xfw8m.us-east-1.rds.amazonaws.com"
 
 #define	    STREAM_AUDIO_TEXT_DATABASE_NAME "ChannelTranscription"
 #define	STREAM_AUDIO_TEXT_DATABASE_USERNAME "dbadmin"
@@ -65,10 +68,8 @@ clock_t now(){
 }
 
 std::string getStreamAudioText(std::string& channelName, sql::Connection* con, sql::Statement* stmt, sql::ResultSet* res){
-  std::string result;
+	std::string result;
 
-	/* Devnote: This would be much more efficient if not all comments were extracted, and instead if the comments were already ordered by likes in the comment database. Then, the query could grab the first n
-	   comments only. */
 	/* Extract all comments from the comment database, and order them by likes. */
 	res = stmt->executeQuery("SELECT hyp FROM " + channelName + " ORDER BY _time ASC");
 
@@ -78,72 +79,62 @@ std::string getStreamAudioText(std::string& channelName, sql::Connection* con, s
 		result += " " + hyp;
 	}
 
-	if (result.length() > 0){
-		std::cout << "STREAM AUDIO FROM CHANNEL " << channelName << ": " << result << std::endl;
-	}
-	else{
-		std::cout << "NO STREAM AUDIO FETCHED FROM CHANNEL " << channelName << std::endl;
-	}
- 
 	return result;
 }
 
 std::string space2underscore(std::string text) {
-    for(std::string::iterator it = text.begin(); it != text.end(); ++it) {
-        if(*it == ' ') {
-            *it = '_';
-        }
-    }
-    return text;
+	for (std::string::iterator it = text.begin(); it != text.end(); ++it) {
+		if (*it == ' ') {
+			*it = '_';
+		}
+	}
+	return text;
 }
 
 std::string replaceChar(std::string str, char ch1, char ch2) {
-  for (int i = 0; i < str.length(); ++i) {
-    if (str[i] == ch1)
-      str[i] = ch2;
-  }
-
-  return str;
+	for (int i = 0; i < str.length(); ++i) {
+		if (str[i] == ch1)
+			str[i] = ch2;
+	}
+	return str;
 }
 
 void createCommentTableForChannel(std::string& channelName, sql::Statement* stmt){
-	//stmt->execute("DROP TABLE IF EXISTS " + channelName);
+	/* Create a comment table in the database to handle comments from the given channel. */
 	stmt->execute("CREATE TABLE IF NOT EXISTS " + channelName + "(timeSent TIMESTAMP, message varchar(512) PRIMARY KEY, likes INT, username VARCHAR(45), rgb VARCHAR(20))");
 }
 
 void resetPopularityIPTable(std::string& channelName, sql::Statement* stmt, std::string& currentKeyword){
-  std::cout << "Resetting Popularity IP table..." << std::endl;
-  stmt->execute("DROP TABLE IF EXISTS " + channelName + space2underscore(currentKeyword) + "Popularity");
+	stmt->execute("DROP TABLE IF EXISTS " + channelName + space2underscore(currentKeyword) + "Popularity");
 }
 
 void createAdTableForChannel(std::string& channelName, sql::Connection* con, sql::Statement* stmt){
-  sql::PreparedStatement *pstmt;
+	sql::PreparedStatement *pstmt;
 	stmt->execute("DROP TABLE IF EXISTS " + channelName);
 	stmt->execute("CREATE TABLE " + channelName + "(id int primary key not null, Keyword varchar(500), clicks int, viewers int)");
-  pstmt = con->prepareStatement("INSERT INTO " + channelName + "(id) VALUES (?)");
-  pstmt->setInt(1, 0);
+	pstmt = con->prepareStatement("INSERT INTO " + channelName + "(id) VALUES (?)");
+	pstmt->setInt(1, 0);
 	pstmt->executeUpdate();
-  delete pstmt;
+	delete pstmt;
 }
 
 void writeAdKeywordToDatabase(std::string& keyword, std::string& channelName, sql::Connection* con, sql::Statement* stmt, sql::ResultSet* res){
-  if(keyword == "") { keyword = "null"; }
-  const char filler = '_';
-  keyword.resize(40, filler);
-  keyword = replaceChar(keyword, '\'', '_');
-  std::cout << "Writing " << keyword << " KEYWORD to database..." << std::endl;
-  resetPopularityIPTable(channelName, stmt, keyword);
+	const char filler = '_';							/* Specify which character will be used to extend the string to 40 characters, if it is shorter than 40. */
+	if (keyword == "") { keyword = "null"; }			/* If the keyword is empty, change it to "null". */
+	keyword.erase(std::remove_if(keyword.begin(), keyword.end(), [](const unsigned &c){ return !isspace(c) && !isalpha(c);}), keyword.end());
+														/* Strip the keyword of all non-alphanumeric characters. */
+	keyword.resize(40, filler);							/* Resize the string to size 40; if it's already shorter than 40, fill in the remaining space with the filler character. */
+	//keyword = replaceChar(keyword, '\'', '_'); // DEVNOTE can't remember what this does. Remove it if possible.
+	resetPopularityIPTable(channelName, stmt, keyword);	/* Because the keyword is being overwritten, reset the table that tracks clicks for this keyword from unique IP's. */
 	sql::PreparedStatement *pstmt;
-  pstmt = con->prepareStatement("UPDATE " + channelName + " SET Keyword='" + keyword + "', clicks=0");
-	pstmt->executeUpdate();
+	pstmt = con->prepareStatement("UPDATE " + channelName + " SET Keyword='" + keyword + "', clicks=0");
+	pstmt->executeUpdate();								/* Write the keyword to the database. */
 	delete pstmt;
 }
 
 std::vector<std::string> getFeaturedCommentsFromDatabase(std::string& channelName, sql::Statement* stmt, sql::ResultSet* res){
 	std::vector<std::string> results;
 
-	/* Devnote: This would be much more efficient if not all comments were extracted, and instead if the comments were already ordered by likes in the comment database. Then, the query could grab the first n
-	   comments only. */
 	/* Extract all comments from the comment database, and order them by likes. */
 	res = stmt->executeQuery("SELECT message FROM " + channelName + " ORDER BY likes DESC");
 
@@ -153,215 +144,190 @@ std::vector<std::string> getFeaturedCommentsFromDatabase(std::string& channelNam
 		results.push_back(message);
 	}
 
-	if (results.size() > 0){
-		std::cout << "First featured comment from channel " << channelName << ": " << results[0] << std::endl;
+	if (results.size() == 0){
+		results.push_back("Alienware laptop");
 	}
-	else{
-		std::cout << "No comments fetched from channel " << channelName << std::endl;
-    results.push_back("trash can");
-	}
- 
+
 	return results;
 }
 
 double getAdPopularity(std::string& channelName, sql::Connection* con, sql::Statement* stmt, sql::ResultSet* res){
-  int clicks = 0;
-  int viewers = 0;
-  
-  res = stmt->executeQuery("SELECT clicks FROM " + channelName);
-  
-  while (res->next()) {
-    clicks = res->getInt("clicks");
-  }
-  
-  res = stmt->executeQuery("SELECT viewers FROM " + channelName);
-  
-  while (res->next()) {
-    viewers = res->getInt("viewers");
-  }
-  
-  return ((double)clicks / viewers) * POPULARITY_MULTIPLIER;
+	int clicks = 0;
+	int viewers = 0;
+
+	res = stmt->executeQuery("SELECT clicks FROM " + channelName);
+
+	while (res->next()) {
+		clicks = res->getInt("clicks");
+	}
+
+	res = stmt->executeQuery("SELECT viewers FROM " + channelName);
+
+	while (res->next()) {
+		viewers = res->getInt("viewers");
+	}
+
+	return ((double)clicks / viewers) * POPULARITY_MULTIPLIER;
 }
 
-void updateAdvertisement(std::vector<std::string>& featuredComments, std::string& streamAudioText, std::vector<std::string>& advertisementPool, 
+void updateAdvertisement(std::vector<std::string>& featuredComments, std::string& streamAudioText, std::vector<std::string>& advertisementPool,
 	int& advertisementRotationIndex, std::string& channelName, sql::Connection* con, sql::Statement* stmt, sql::ResultSet* res, clock_t& currentAdLifetime, int& adSource){
-               std::string featuredAdvertisement;
-	        std::vector<int> scores;
+	std::string featuredAdvertisement;
+	std::vector<int> scores;
 	std::vector<std::string> keywordPool, wordsInComment, wordsInStreamAudioText = stringToWords(streamAudioText), wordsAlreadyFromThisComment, wordsInAd;
-	                    bool overrideRotation = false;
-                    double popularity;
-                    
-  adSource++;
-  if(adSource == 3) {adSource = 0;}	
-  
-  // Devnote: Establish connections here instead of having them passed in; in fact, minimize number of parameters passed in to this function.
-  // Devnote: If the randomized ad is the same as the previous one, reroll.
-  
+	bool overrideRotation = false;
+	double popularity;
+                
+	adSource = (adSource + 1) % 3;	/* Change the source of the advertisement. The source of the ad keyword rotates between the featured comments, stream audio, and the hard-coded keyword pool. */
+
 	/* Increment the current ad's lifetime accordingly. */
 	currentAdLifetime += AD_UPDATE_RATE_MS;
-  
-  /* If the current ad isn't too old, check to see if it's popular enough to keep around. Otherwise, proceed to replace it. */
+
+	/* If the current ad isn't too old, check to see if it's popular enough to keep around. Otherwise, proceed to replace it. */
 	if (!(currentAdLifetime > MAX_AD_LIFETIME_MS)){
 		popularity = getAdPopularity(channelName, con, stmt, res);
-		std::cout << "Ad Popularity: " << popularity << std::endl;
 
 		/* If the current ad is popular enough, don't change it. */
-    std::cout << currentAdLifetime << " / " << MAX_AD_LIFETIME_MS << " = " << (double)currentAdLifetime / MAX_AD_LIFETIME_MS << std::endl;
 		if (popularity - ((double)currentAdLifetime / MAX_AD_LIFETIME_MS) > 0){
-      std::cout << "Ad is popular, don't kill it." << std::endl;
 			return;
 		}
 	}
- 
-  switch(adSource){
-  case 0:
-    std::cout << "case 0" << std::endl;
-    writeAdKeywordToDatabase(featuredComments[0], channelName, con, stmt, res);
-    std::cout << "Featured comments ad keyword:: " << featuredComments[0] << std::endl;
-    break;
-  case 1:
-  std::cout << "case 1" << std::endl;
-    writeAdKeywordToDatabase(streamAudioText, channelName, con, stmt, res);
-    std::cout << "Stream audio text ad keyword: " << streamAudioText << std::endl;
-    break;
-  case 2:
-  std::cout << "case 2" << std::endl;
-  /* Randomly shuffle the advertisement pool vector to avoid bias towards one particular ad due to searching it inorder. */
-	std::random_shuffle(advertisementPool.begin(), advertisementPool.end());
- 
- 	/* Initialize the scores vector by populating it with zeros. */
-	for (int i = 0; i < advertisementPool.size(); i++){
-		scores.push_back(0);
-	}
 
-	/* Search the advertisement pool for matches, given strings from the stream audio as queries. If there's a match, set the featured advertisement variable appropriately and return. */
-	for (int i = 0; i < advertisementPool.size(); i++){
-		wordsInAd = stringToWords(advertisementPool[i]); // Devnote: this stringToWords op is being called below. Instead, store it in a vector and only call it once.
-		for (auto wordInAd : wordsInAd){
-			for (auto word : stringToWords(streamAudioText)){
-				if (toLower(wordInAd) == word){
-					overrideRotation = true;
-					scores[i]++;
+	switch (adSource){
+	/* Derive ad keyword from featured comments */
+	case 0:
+		writeAdKeywordToDatabase(featuredComments[0], channelName, con, stmt, res);
+		break;
+
+	/* Derive ad keyword from stream audio */
+	case 1:
+		writeAdKeywordToDatabase(streamAudioText, channelName, con, stmt, res);
+		break;
+
+	/* Derive ad keyword from hard-coded pool */
+	case 2:
+		/* Randomly shuffle the advertisement pool vector to avoid bias towards one particular ad due to searching it inorder. */
+		std::random_shuffle(advertisementPool.begin(), advertisementPool.end());
+
+		/* Initialize the scores vector by populating it with zeros. */
+		for (int i = 0; i < advertisementPool.size(); i++){
+			scores.push_back(0);
+		}
+
+		/* Search the advertisement pool for matches, given strings from the stream audio as queries. If there's a match, set the featured advertisement variable appropriately and return. */
+		for (int i = 0; i < advertisementPool.size(); i++){
+			wordsInAd = stringToWords(advertisementPool[i]); // Devnote: this stringToWords op is being called below. Instead, store it in a vector and only call it once.
+			for (auto wordInAd : wordsInAd){
+				for (auto word : stringToWords(streamAudioText)){
+					if (toLower(wordInAd) == word){
+						overrideRotation = true;
+						scores[i]++;
+					}
 				}
 			}
 		}
-	}
 
-  if (overrideRotation){
-   featuredAdvertisement = advertisementPool[findMaxIndex(scores)];
-   writeAdKeywordToDatabase(featuredAdvertisement, channelName, con, stmt, res);
-   currentAdLifetime = 0;
-   std::cout << "Mentioned ad: " << featuredAdvertisement << std::endl;
-	 return;
-  }
-
-	/* Add words from featured comments to the keyword pool, ignoring duplicate words within each individual comment;
-	i.e. the comments "HyperX rules!" and "HyperX HyperX HyperX" will both only count as one occurence of "HyperX". */
-	for (auto commentMessage : featuredComments){
-		wordsInComment = stringToWords(commentMessage);
-		wordsAlreadyFromThisComment.clear();
-
-		for (auto wordInComment : wordsInComment){
-			wordInComment = toLower(wordInComment);
-			if (haysackContainsNeedle(wordsAlreadyFromThisComment, wordInComment)){
-				keywordPool.push_back(wordInComment);
-
-				/* Record that this word has already occurred in this comment, so that future occurances of it in this comment are ignored. */
-				wordsAlreadyFromThisComment.push_back(wordInComment);
-			}
+		if (overrideRotation){
+			featuredAdvertisement = advertisementPool[findMaxIndex(scores)];
+			writeAdKeywordToDatabase(featuredAdvertisement, channelName, con, stmt, res);
+			currentAdLifetime = 0;
+			return;
 		}
-	}
 
-	/* Search the advertisement pool for word matches and increment that ad's score accordingly. */
-	for (int i = 0; i < advertisementPool.size(); i++){
-		wordsInAd = stringToWords(advertisementPool[i]);
-		for (auto wordInAd : wordsInAd){
-			for (auto word : keywordPool){
-				if (toLower(wordInAd) == word){
-					overrideRotation = true;
-					scores[i]++;
+		/* Add words from featured comments to the keyword pool, ignoring duplicate words within each individual comment;
+		   i.e. the comments "HyperX rules!" and "HyperX HyperX HyperX" will both only count as one occurence of "HyperX". */
+		for (auto commentMessage : featuredComments){
+			wordsInComment = stringToWords(commentMessage);
+			wordsAlreadyFromThisComment.clear();
+
+			for (auto wordInComment : wordsInComment){
+				wordInComment = toLower(wordInComment);
+				if (haysackContainsNeedle(wordsAlreadyFromThisComment, wordInComment)){
+					keywordPool.push_back(wordInComment);
+
+					/* Record that this word has already occurred in this comment, so that future occurances of it in this comment are ignored. */
+					wordsAlreadyFromThisComment.push_back(wordInComment);
 				}
 			}
 		}
+
+		/* Search the advertisement pool for word matches and increment that ad's score accordingly. */
+		for (int i = 0; i < advertisementPool.size(); i++){
+			wordsInAd = stringToWords(advertisementPool[i]);
+			for (auto wordInAd : wordsInAd){
+				for (auto word : keywordPool){
+					if (toLower(wordInAd) == word){
+						overrideRotation = true;
+						scores[i]++;
+					}
+				}
+			}
+		}
+
+		/* Set the featured advertisement, depending on whether or not the rotation should be overridden. */
+		featuredAdvertisement = overrideRotation ? advertisementPool[findMaxIndex(scores)] : advertisementPool[advertisementRotationIndex];
+
+		/* Increment the advertisement rotation index, effectively moving the ad currently on-deck to being at-bat. */
+		advertisementRotationIndex = (advertisementRotationIndex + 1) % advertisementPool.size();
+
+		writeAdKeywordToDatabase(featuredAdvertisement, channelName, con, stmt, res);
+		currentAdLifetime = 0;
+
+		break;
 	}
-
-	/* Set the featured advertisement, depending on whether or not the rotation should be overridden. */
-	featuredAdvertisement = overrideRotation ? advertisementPool[findMaxIndex(scores)] : advertisementPool[advertisementRotationIndex];
-
-	/* Increment the advertisement rotation index, effectively moving the ad currently on-deck to being at-bat. */
-	advertisementRotationIndex = (advertisementRotationIndex + 1) % advertisementPool.size();
-
-	writeAdKeywordToDatabase(featuredAdvertisement, channelName, con, stmt, res);
-  currentAdLifetime = 0;
-
-	if (overrideRotation){
-		std::cout << "Mentioned ad: " << featuredAdvertisement << std::endl;
-	}
-	else{
-		std::cout << "Rotation ad: " << featuredAdvertisement << std::endl;
-	}
-    break;
-  }
 }
 
 void manageStream(std::string channelName){
-	try {
-		/* Devnote: how do we obtain a unique channel name for each process? In other words, how can we tell each process which channel it's assigned to? */
-		sql::mysql::MySQL_Driver* driver;
-				     sql::Connection* commentConnection;
-             sql::Connection* adConnection;
-             sql::Connection* streamAudioTextConnection;
-				      sql::Statement* commentStatement;
-              sql::Statement* adStatement;
-              sql::Statement* streamAudioTextStatement;
-				      sql::ResultSet* commentResultSet;
-              sql::ResultSet* adResultSet;
-              sql::ResultSet* streamAudioTextResultSet;
-		 std::vector<std::string> advertisementKeywordPool;
-     std::vector<std::string> featuredComments;
-		              std::string streamAudioText;
-                  std::string advertisementKeyword;
-						          clock_t lastCommentFetch = now();
-                      clock_t lastAdvertisementFetch = now();
-                      clock_t commentTimeElapsed;
-                      clock_t advertisementTimeElapsed;
-                      clock_t currentAdLifetime = 0;
-							            int advertisementRotationIndex = 0;
-                          int adSource = 0;
+	sql::mysql::MySQL_Driver* driver;
+	sql::Connection* commentConnection;
+	sql::Connection* adConnection;
+	sql::Connection* streamAudioTextConnection;
+	sql::Statement* commentStatement;
+	sql::Statement* adStatement;
+	sql::Statement* streamAudioTextStatement;
+	sql::ResultSet* commentResultSet;
+	sql::ResultSet* adResultSet;
+	sql::ResultSet* streamAudioTextResultSet;
+	std::vector<std::string> advertisementKeywordPool;
+	std::vector<std::string> featuredComments;
+	std::string streamAudioText;
+	std::string advertisementKeyword;
+	clock_t lastCommentFetch = now();
+	clock_t lastAdvertisementFetch = now();
+	clock_t commentTimeElapsed;
+	clock_t advertisementTimeElapsed;
+	clock_t currentAdLifetime = 0;
+	int advertisementRotationIndex = 0;
+	int adSource = 0;
 
-		/* Dev note: for now, we are taking a string (such as "keyboard") and iterating over every ad in the pool, asking if its title contains "keyboard". However,
-		   the way stream audio or chat text is used to lookup an ad (i.e. asking if the string "keyboard" is in the advertisement pool) would be most effecient if implemented
-		   using a hashtable, where if hashtable.find("keyboard") will point to an advertisement that contains "keyboard" in its title. If there are multiple ads that have "keyboard" in their title, use a rank
-		   to choose which ad to select - advertisers can pay to increase their rank/the likelyhood of their ad's rank being selected. */
-		
+	try {
 		/* Populate the advertisement keyword pool. */
 		advertisementKeywordPool.push_back("HyperX Headset");
 		advertisementKeywordPool.push_back("DXracer Chair");
 		advertisementKeywordPool.push_back("Redragon Keyboard");
 		advertisementKeywordPool.push_back("ROCCAT Mouse");
 		advertisementKeywordPool.push_back("Asus Monitor");
-    //advertisementKeywordPool.push_back("pleasure but");
 
 		/* Establish a connection to both the comment database and the ad database. */
 		driver = sql::mysql::get_driver_instance();
-		commentConnection = driver->connect((std::string)COMMENT_DATABASE_ENDPOINT_PREFIX + (std::string)COMMENT_DATABASE_ENDPOINT_SUFFIX, COMMENT_DATABASE_USERNAME,        COMMENT_DATABASE_PASSWORD);
+		commentConnection = driver->connect((std::string)COMMENT_DATABASE_ENDPOINT_PREFIX + (std::string)COMMENT_DATABASE_ENDPOINT_SUFFIX, COMMENT_DATABASE_USERNAME, COMMENT_DATABASE_PASSWORD);
 		commentStatement = commentConnection->createStatement();
 		commentStatement->execute("USE " + (std::string)COMMENT_DATABASE_NAME);
 		adConnection = driver->connect(AD_DATABASE_ENDPOINT, AD_DATABASE_USERNAME, AD_DATABASE_PASSWORD);
 		adStatement = adConnection->createStatement();
 		adStatement->execute("USE " + (std::string)AD_DATABASE_NAME);
-    streamAudioTextConnection = driver->connect(STREAM_AUDIO_TEXT_DATABASE_ENDPOINT, STREAM_AUDIO_TEXT_DATABASE_USERNAME, STREAM_AUDIO_TEXT_DATABASE_PASSWORD);
+		streamAudioTextConnection = driver->connect(STREAM_AUDIO_TEXT_DATABASE_ENDPOINT, STREAM_AUDIO_TEXT_DATABASE_USERNAME, STREAM_AUDIO_TEXT_DATABASE_PASSWORD);
 		streamAudioTextStatement = streamAudioTextConnection->createStatement();
 		streamAudioTextStatement->execute("USE " + (std::string)STREAM_AUDIO_TEXT_DATABASE_NAME);
 
 		/* Create a table in the comment database to handle this stream channel's comments. */
 		createCommentTableForChannel(channelName, commentStatement);
-   
-    /* Create a table in the advertisement database to handle this stream channel's advertisements. */
+
+		/* Create a table in the advertisement database to handle this stream channel's advertisements. */
 		createAdTableForChannel(channelName, adConnection, adStatement);
-   
-    /* Initialize the advertisement to the first advertisement in the pool. */
-    writeAdKeywordToDatabase(advertisementKeywordPool[0], channelName, adConnection, adStatement, adResultSet);
+
+		/* Initialize the advertisement to the first advertisement in the pool. */
+		writeAdKeywordToDatabase(advertisementKeywordPool[0], channelName, adConnection, adStatement, adResultSet);
 
 		/* Begin the main process loop */
 		while (true){
@@ -375,7 +341,6 @@ void manageStream(std::string channelName){
 			/* If past the advertisement update rate, update the featured advertisement keyword. This could be either returning to the normal rotation of ads, or overriding the rotation with a featured */
 			advertisementTimeElapsed = now() - lastAdvertisementFetch;
 			if (advertisementTimeElapsed >= AD_UPDATE_RATE_MS){
-				std::cout << "Updating advertisements... (" << advertisementTimeElapsed << " ms have elapsed)" << std::endl;
 				streamAudioText = getStreamAudioText(channelName, streamAudioTextConnection, streamAudioTextStatement, streamAudioTextResultSet);
 				updateAdvertisement(featuredComments, streamAudioText, advertisementKeywordPool, advertisementRotationIndex, channelName, adConnection, adStatement, adResultSet, currentAdLifetime, adSource);
 				lastAdvertisementFetch = now();
